@@ -7,10 +7,8 @@ import * as Prompt from "../effect/prompt"
 import { ModelsDev } from "@opencode-ai/core/models-dev"
 
 import { map, pipe, sortBy, values } from "remeda"
-import path from "path"
 import os from "os"
 import { Config } from "@/config/config"
-import { Global } from "@opencode-ai/core/global"
 import { Plugin } from "../../plugin"
 import type { Hooks } from "@opencode-ai/plugin"
 import { Process } from "@/util/process"
@@ -256,7 +254,7 @@ export const ProvidersListCommand = effectCmd({
     const modelsDev = yield* ModelsDev.Service
 
     UI.empty()
-    const authPath = path.join(Global.Path.data, "auth.json")
+    const authPath = Auth.file()
     const homedir = os.homedir()
     const displayPath = authPath.startsWith(homedir) ? authPath.replace(homedir, "~") : authPath
     yield* Prompt.intro(`Credentials ${UI.Style.TEXT_DIM}${displayPath}`)

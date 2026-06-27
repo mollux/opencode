@@ -1,7 +1,9 @@
 import { describe, expect } from "bun:test"
+import path from "path"
 import { Effect, Layer } from "effect"
-import { Auth } from "../../src/auth"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
+import { Global } from "@opencode-ai/core/global"
+import { Auth } from "../../src/auth"
 import { testEffect } from "../lib/effect"
 
 const node = CrossSpawnSpawner.defaultLayer
@@ -72,6 +74,33 @@ describe("Auth", () => {
       yield* auth.remove("anthropic")
       const after = yield* auth.all()
       expect(after["anthropic"]).toBeUndefined()
+    }),
+  )
+
+  it.effect("file resolves OPENCODE_AUTH_PATH relative to data dir", () =>
+    Effect.sync(() => {
+      const previous = process.env.OPENCODE_AUTH_PATH
+      process.env.OPENCODE_AUTH_PATH = "custom-auth.json"
+      try {
+        expect(Auth.file()).toBe(path.join(Global.Path.data, "custom-auth.json"))
+      } finally {
+        if (previous === undefined) delete process.env.OPENCODE_AUTH_PATH
+        else process.env.OPENCODE_AUTH_PATH = previous
+      }
+    }),
+  )
+
+  it.effect("file keeps OPENCODE_AUTH_PATH absolute", () =>
+    Effect.sync(() => {
+      const previous = process.env.OPENCODE_AUTH_PATH
+      const authPath = path.join(Global.Path.data, "auth-alt.json")
+      process.env.OPENCODE_AUTH_PATH = authPath
+      try {
+        expect(Auth.file()).toBe(authPath)
+      } finally {
+        if (previous === undefined) delete process.env.OPENCODE_AUTH_PATH
+        else process.env.OPENCODE_AUTH_PATH = previous
+      }
     }),
   )
 })
