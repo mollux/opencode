@@ -139,7 +139,7 @@ opencode auth [command]
 
 #### login
 
-OpenCode is powered by the provider list at [Models.dev](https://models.dev), so you can use `opencode auth login` to configure API keys for any provider you'd like to use. This is stored in `~/.local/share/opencode/auth.json`.
+OpenCode is powered by the provider list at [Models.dev](https://models.dev), so you can use `opencode auth login` to configure API keys for any provider you'd like to use. By default this is stored in `~/.local/share/opencode/auth.json` and can be overridden with `OPENCODE_AUTH_PATH`.
 
 ```bash
 opencode auth login
@@ -682,6 +682,7 @@ OpenCode can be configured using environment variables.
 | `OPENCODE_AUTO_SHARE`                 | boolean | Automatically share sessions                      |
 | `OPENCODE_GIT_BASH_PATH`              | string  | Path to Git Bash executable on Windows            |
 | `OPENCODE_CONFIG`                     | string  | Path to config file                               |
+| `OPENCODE_AUTH_PATH`                  | string  | Customize auth credential file path               |
 | `OPENCODE_TUI_CONFIG`                 | string  | Path to TUI config file                           |
 | `OPENCODE_CONFIG_DIR`                 | string  | Path to config directory                          |
 | `OPENCODE_CONFIG_CONTENT`             | string  | Inline json config content                        |

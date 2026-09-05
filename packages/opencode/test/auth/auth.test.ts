@@ -1,7 +1,10 @@
 import { describe, expect } from "bun:test"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { Effect } from "effect"
+import path from "path"
+import fs from "node:fs/promises"
 import { Auth } from "../../src/auth"
+import { Global } from "@opencode-ai/core/global"
 import { testEffect } from "../lib/effect"
 
 const it = testEffect(LayerNode.compile(Auth.node))
@@ -70,6 +73,39 @@ describe("Auth", () => {
       yield* auth.remove("anthropic")
       const after = yield* auth.all()
       expect(after["anthropic"]).toBeUndefined()
+    }),
+  )
+
+  it.instance("reads and writes OPENCODE_AUTH_PATH relative to data dir", () =>
+    Effect.gen(function* () {
+      const prev = process.env.OPENCODE_AUTH_PATH
+      process.env.OPENCODE_AUTH_PATH = "custom-auth.json"
+      try {
+        const auth = yield* Auth.Service
+        yield* auth.set("anthropic", { type: "api", key: "sk-test" })
+        const data = yield* Effect.promise(() => fs.readFile(path.join(Global.Path.data, "custom-auth.json"), "utf8"))
+        expect(JSON.parse(data)).toEqual({ anthropic: { type: "api", key: "sk-test" } })
+      } finally {
+        if (prev === undefined) delete process.env.OPENCODE_AUTH_PATH
+        else process.env.OPENCODE_AUTH_PATH = prev
+      }
+    }),
+  )
+
+  it.instance("reads and writes OPENCODE_AUTH_PATH absolute", () =>
+    Effect.gen(function* () {
+      const prev = process.env.OPENCODE_AUTH_PATH
+      const auth = path.join(Global.Path.data, "auth-alt.json")
+      process.env.OPENCODE_AUTH_PATH = auth
+      try {
+        const service = yield* Auth.Service
+        yield* service.set("anthropic", { type: "api", key: "sk-test" })
+        const data = yield* Effect.promise(() => fs.readFile(auth, "utf8"))
+        expect(JSON.parse(data)).toEqual({ anthropic: { type: "api", key: "sk-test" } })
+      } finally {
+        if (prev === undefined) delete process.env.OPENCODE_AUTH_PATH
+        else process.env.OPENCODE_AUTH_PATH = prev
+      }
     }),
   )
 })

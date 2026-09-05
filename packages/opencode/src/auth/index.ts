@@ -7,7 +7,12 @@ import { FSUtil } from "@opencode-ai/core/fs-util"
 
 export const OAUTH_DUMMY_KEY = "opencode-oauth-dummy-key"
 
-const file = path.join(Global.Path.data, "auth.json")
+function authFile() {
+  const override = process.env.OPENCODE_AUTH_PATH
+  if (!override) return path.join(Global.Path.data, "auth.json")
+  if (path.isAbsolute(override)) return override
+  return path.join(Global.Path.data, override)
+}
 
 const fail = (message: string) => (cause: unknown) => new AuthError({ message, cause })
 
@@ -62,7 +67,7 @@ const layer = Layer.effect(
         } catch (err) {}
       }
 
-      const data = (yield* fsys.readJson(file).pipe(Effect.orElseSucceed(() => ({})))) as Record<string, unknown>
+      const data = (yield* fsys.readJson(authFile()).pipe(Effect.orElseSucceed(() => ({})))) as Record<string, unknown>
       return Record.filterMap(data, (value) => Result.fromOption(decode(value), () => undefined))
     })
 
@@ -76,7 +81,7 @@ const layer = Layer.effect(
       if (norm !== key) delete data[key]
       delete data[norm + "/"]
       yield* fsys
-        .writeJson(file, { ...data, [norm]: info }, 0o600)
+        .writeJson(authFile(), { ...data, [norm]: info }, 0o600)
         .pipe(Effect.mapError(fail("Failed to write auth data")))
     })
 
@@ -85,7 +90,7 @@ const layer = Layer.effect(
       const data = yield* all()
       delete data[key]
       delete data[norm]
-      yield* fsys.writeJson(file, data, 0o600).pipe(Effect.mapError(fail("Failed to write auth data")))
+      yield* fsys.writeJson(authFile(), data, 0o600).pipe(Effect.mapError(fail("Failed to write auth data")))
     })
 
     return Service.of({ get, all, set, remove })
